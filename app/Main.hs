@@ -1,6 +1,6 @@
 module Main where
 
-import Lib
+import GapParser
 
 main :: IO ()
-main = someFunc
+main = return ()
