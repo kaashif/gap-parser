@@ -4,26 +4,25 @@ cabal-version: 1.12
 --
 -- see: https://github.com/sol/hpack
 --
--- hash: be11dcaaf4c2fac4ff3b9f2ad68d22bd4f409b49880a2fd34eaf758a42cac394
+-- hash: 2f5a56625d00090f3c2546f8ddaac3c02d8a5fd05671b5dbe2992ee4af09f102
 
 name:           gap-parser
 version:        0.1.0.0
-description:    Please see the README on GitHub at <https://github.com/githubuser/gap-parser#readme>
-homepage:       https://github.com/githubuser/gap-parser#readme
-bug-reports:    https://github.com/githubuser/gap-parser/issues
-author:         Author name here
-maintainer:     example@example.com
-copyright:      2020 Author name here
-license:        BSD3
+description:    Please see the README on GitHub at <https://github.com/kaashif/gap-parser>
+homepage:       https://github.com/kaashif/gap-parser#readme
+bug-reports:    https://github.com/kaashif/gap-parser/issues
+author:         Kaashif Hymabaccus
+maintainer:     kaashif@kaashif.co.uk
+copyright:      2020 Kaashif Hymabaccus
+license:        GPL3
 license-file:   LICENSE
 build-type:     Simple
 extra-source-files:
     README.md
-    ChangeLog.md
 
 source-repository head
   type: git
-  location: https://github.com/githubuser/gap-parser
+  location: https://github.com/kaashif/gap-parser
 
 library
   exposed-modules:
