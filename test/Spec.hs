@@ -65,8 +65,17 @@ gapExamples =
                                                       (Lit $ IntLit 2)
                                                       (Lit $ IntLit 3)
     )
-  , ( "4.4 if whitespace"
+  , ( "4.4 if single line"
     , "if i<0 then a:=-i;else a:=i;fi;"
+    , IfElifElse [(Binary Less (Var "i") (Lit $ IntLit 0), Assign "a" (Neg $ Var "i"))]
+      (Assign "a" $ Var "i")
+    )
+  , ( "4.4 if multiline"
+    , "if i < 0 then   # if i is negative\n\
+      \  a := -i;      #   take its additive inverse\n\
+      \else            # otherwise\n\
+      \  a := i;       #   take itself\n\
+      \fi;"
     , IfElifElse [(Binary Less (Var "i") (Lit $ IntLit 0), Assign "a" (Neg $ Var "i"))]
       (Assign "a" $ Var "i")
     )
