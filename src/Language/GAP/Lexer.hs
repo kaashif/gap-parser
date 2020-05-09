@@ -80,7 +80,9 @@ languageDef = emptyDef { Token.commentStart    = ""
                        , Token.opLetter        = oneOf $ concat gapOperators
                        }
 
+lexer :: Token.TokenParser u
 lexer = Token.makeTokenParser languageDef
+
 identifier = Token.identifier lexer
 commaSep = Token.commaSep lexer
 reserved = Token.reserved lexer
