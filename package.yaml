@@ -18,17 +18,6 @@ dependencies:
 library:
   source-dirs: src
 
-executables:
-  gap-parser-exe:
-    main:                Main.hs
-    source-dirs:         app
-    ghc-options:
-    - -threaded
-    - -rtsopts
-    - -with-rtsopts=-N
-    dependencies:
-    - gap-parser
-
 tests:
   gap-parser-test:
     main:                Spec.hs
