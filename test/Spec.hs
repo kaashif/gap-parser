@@ -3,7 +3,8 @@ import           Language.GAP.Parser
 import           Language.GAP.Types
 import           Control.Monad
 
-checkExample (description, str, ast) = it description $ (parseString str) `shouldBe` ast
+checkExample (description, str, ast) =
+  it description $ (parseString str) `shouldBe` ast
 
 examples =
   [ ("parses int assign"  , "a := 1;"  , (Assign "a" (Lit $ IntLit 1)))
@@ -25,7 +26,9 @@ examples =
     , (Assign "f" $ Lit $ FuncDef ["x"] $ Return $ Var "x")
     )
   , ( "parses assign to multi-line function literal"
-    , "f := function(x)\n    return x;\nend;"
+    , "f := function(x)\
+      \    return x;\
+      \end;"
     , (Assign "f" $ Lit $ FuncDef ["x"] $ Return $ Var "x")
     )
   , ( "parses multi-expression function literal"
@@ -45,4 +48,6 @@ examples =
   ]
 
 main :: IO ()
-main = hspec $ describe "Language.GAP.Parser.parseString" $ mapM_ checkExample examples
+main = hspec $ describe "Language.GAP.Parser.parseString" $ mapM_
+  checkExample
+  examples
