@@ -2,6 +2,9 @@ module Language.GAP.Parser where
 
 import           System.IO
 import           Control.Monad
+import           Control.Applicative     hiding ( (<|>)
+                                                , many
+                                                )
 import           Text.ParserCombinators.Parsec
 import           Text.ParserCombinators.Parsec.Expr
 import           Text.ParserCombinators.Parsec.Language
@@ -27,24 +30,18 @@ parseFile file = do
 
 -- Statements - expressions plus things that don't evaluate to values
 
-statements = do
-  list <- many1 statement
-  return $ if length list == 1 then head list else Seq list
+statements = f <$> many1 statement
+  where f list = if length list == 1 then head list else Seq list
 
 statement :: Parser Stmt
-statement = do
-  stmt <- returnStmt <|> ifStmt <|> whileStmt <|> assignStmt <|> exprStmt
-  many1 semi
-  return stmt
+statement = stmt <* many1 semi
+  where stmt = returnStmt <|> ifStmt <|> whileStmt <|> assignStmt <|> exprStmt
 
 -- The only statements that evaluate to something are expressions
-exprStmt = liftM ExprStmt expression
+exprStmt = ExprStmt <$> expression
 
 -- Note: return doesn't evaluate to a value, it's not an expression
-returnStmt = do
-  reserved "return"
-  expr <- expression
-  return $ Return expr
+returnStmt = pure Return <* reserved "return" <*> expression
 
 ifStmt :: Parser Stmt
 ifStmt = do
@@ -72,13 +69,13 @@ ifStmt = do
     Nothing   -> IfElif $ (cond, stmt1) : elifConds
 
 whileStmt :: Parser Stmt
-whileStmt = do
-  reserved "while"
-  cond <- expression
-  reserved "do"
-  stmt <- statements
-  reserved "od"
-  return $ While cond stmt
+whileStmt =
+  (pure While)
+    <*  (reserved "while")
+    <*> expression
+    <*  reserved "do"
+    <*> statements
+    <*  reserved "od"
 
 assignStmt :: Parser Stmt
 assignStmt = do
@@ -94,14 +91,24 @@ assignStmt = do
 expression :: Parser Expr
 expression = buildExpressionParser operators term
 
-listExpr = squares $ do
-  exprs <- commaSep expression
-  return $ List exprs
+listExpr = squares $ List <$> (commaSep expression)
 
-funcCallExpr = do
-  function <- identifier
-  args     <- parens $ commaSep expression
-  return $ FuncCall function args
+-- of the form expr{expr}. Careful to avoid infinite recursion.
+listSlice = do
+  list  <- expression
+  slice <- braces expression
+  return $ ListSlice list slice
+
+-- expression of the form [first, second .. last] or [first .. last]
+listRange =
+  squares
+    $   ListRange
+    <$> expression
+    <*> (optionMaybe $ try (comma >> expression))
+    <*  (reservedOp "..")
+    <*> expression
+
+funcCallExpr = FuncCall <$> identifier <*> (parens $ commaSep expression)
 
 operators =
   [ [Infix (reservedOp "^" >> return (Binary Power)) AssocNone]
@@ -127,7 +134,14 @@ operators =
     ]
   ]
 
-term = parens expression <|> try funcCallExpr <|> listExpr <|> liftM Lit literal <|> liftM Var identifier
+term =
+  parens expression
+    <|> try funcCallExpr
+--    <|> try listSlice
+    <|> try listExpr
+    <|> try listRange
+    <|> try (liftM Lit literal)
+    <|> try (liftM Var identifier)
 
 -- Literals
 

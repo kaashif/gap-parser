@@ -1,5 +1,7 @@
 module Language.GAP.Types where
 
+import Data.Maybe
+
 data Stmt = Seq [Stmt]
           | Assign String Expr
           | IfElif [(Expr, Stmt)]
@@ -41,4 +43,6 @@ data Expr = Lit Literal
           | Var String
           | FuncCall String [Expr]
           | List [Expr]
+          | ListSlice Expr Expr
+          | ListRange Expr (Maybe Expr) Expr
             deriving (Show, Eq)

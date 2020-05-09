@@ -62,13 +62,14 @@ gapOperators =
   , ">"
   , ":="
   , "->"
+  , ".."
   ]
 
 languageDef = emptyDef { Token.commentStart    = ""
                        , Token.commentEnd      = ""
                        , Token.commentLine     = "#"
                        , Token.identStart      = letter
-                       , Token.identLetter     = alphaNum <|> char '_'
+                       , Token.identLetter     = alphaNum <|> oneOf "._"
                        , Token.reservedNames   = gapKeywords
                        , Token.reservedOpNames = gapOperators
                        , Token.caseSensitive   = True
@@ -90,3 +91,6 @@ whiteSpace = Token.whiteSpace lexer
 stringLiteral = Token.stringLiteral lexer
 float = Token.float lexer
 squares = Token.brackets lexer
+braces = Token.braces lexer
+operator = Token.operator lexer
+comma = Token.comma lexer
