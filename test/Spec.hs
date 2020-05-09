@@ -45,6 +45,15 @@ examples =
     , "g(1);"
     , (ExprStmt $ FuncCall "g" [Lit $ IntLit 1])
     )
+  , ( "parses list map"
+    , "List([1,2,3], x -> x+1);"
+    , (ExprStmt $ FuncCall
+        "List"
+        [ List [Lit $ IntLit 1, Lit $ IntLit 2, Lit $ IntLit 3]
+        , Lit $ Lambda "x" $ Binary Add (Var "x") (Lit $ IntLit 1)
+        ]
+      )
+    )
   ]
 
 main :: IO ()

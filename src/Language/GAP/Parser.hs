@@ -92,8 +92,7 @@ assignStmt = do
 -- Expressions - things that evaluate to values
 
 expression :: Parser Expr
-expression =
-  try funcCallExpr <|> try listExpr <|> buildExpressionParser operators term
+expression = buildExpressionParser operators term
 
 listExpr = squares $ do
   exprs <- commaSep expression
@@ -127,7 +126,7 @@ operators =
     ]
   ]
 
-term = parens expression <|> liftM Var identifier <|> liftM Lit literal
+term = parens expression <|> try funcCallExpr <|> try listExpr <|> liftM Lit literal <|> liftM Var identifier
 
 -- Literals
 
@@ -138,6 +137,7 @@ literal =
     <|> fmap StringLit stringLiteral
     <|> try (fmap FloatLit float)
     <|> fmap IntLit integer
+    <|> lambdaLit
 
 funcLit = do
   reserved "function"
@@ -145,3 +145,11 @@ funcLit = do
   body <- statements
   reserved "end"
   return $ FuncDef args body
+
+lambdaLit = do
+  arg <- try $ do
+    arg <- identifier
+    reserved "->"
+    return arg
+  ret <- expression
+  return $ Lambda arg ret

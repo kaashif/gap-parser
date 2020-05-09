@@ -14,6 +14,7 @@ data Literal = BoolLit Bool
              | IntLit Integer
              | FloatLit Double
              | FuncDef [String] Stmt
+             | Lambda String Expr
                deriving (Show, Eq)
 
 data BinOp = Add

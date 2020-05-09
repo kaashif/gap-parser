@@ -46,6 +46,7 @@ gapKeywords =
   , "Info"
   , "Assert"
   , ":="
+  , "->"
   ]
 
 gapOperators =
