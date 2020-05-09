@@ -35,6 +35,7 @@ data BinOp = Add
              deriving (Show, Eq)
 
 data Expr = Lit Literal
+          | Neg Expr
           | Not Expr
           | Binary BinOp Expr Expr
           | Var String

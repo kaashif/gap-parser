@@ -34,7 +34,7 @@ statements = do
 statement :: Parser Stmt
 statement = do
   stmt <- returnStmt <|> ifStmt <|> whileStmt <|> assignStmt <|> exprStmt
-  semi
+  many1 semi
   return stmt
 
 -- The only statements that evaluate to something are expressions
@@ -84,7 +84,7 @@ assignStmt :: Parser Stmt
 assignStmt = do
   var <- try $ do
     var <- identifier
-    reserved ":="
+    reservedOp ":="
     return var
   expr <- expression
   return $ Assign var expr
@@ -105,6 +105,7 @@ funcCallExpr = do
 
 operators =
   [ [Infix (reservedOp "^" >> return (Binary Power)) AssocNone]
+  , [Prefix (reservedOp "-" >> return (Neg))]
   , [ Infix (reservedOp "*" >> return (Binary Multiply)) AssocLeft
     , Infix (reservedOp "/" >> return (Binary Divide))   AssocLeft
     , Infix (reservedOp "mod" >> return (Binary Mod))    AssocLeft
@@ -126,18 +127,18 @@ operators =
     ]
   ]
 
-term = parens expression <|> try funcCallExpr <|> try listExpr <|> liftM Lit literal <|> liftM Var identifier
+term = parens expression <|> try funcCallExpr <|> listExpr <|> liftM Lit literal <|> liftM Var identifier
 
 -- Literals
 
 literal =
-  (reserved "true" >> return (BoolLit True))
+  try (reserved "true" >> return (BoolLit True))
     <|> try (reserved "false" >> return (BoolLit False))
-    <|> funcLit
-    <|> fmap StringLit stringLiteral
+    <|> try funcLit
+    <|> try (fmap StringLit stringLiteral)
     <|> try (fmap FloatLit float)
-    <|> fmap IntLit integer
-    <|> lambdaLit
+    <|> try (fmap IntLit integer)
+    <|> try lambdaLit
 
 funcLit = do
   reserved "function"
@@ -149,7 +150,7 @@ funcLit = do
 lambdaLit = do
   arg <- try $ do
     arg <- identifier
-    reserved "->"
+    reservedOp "->"
     return arg
   ret <- expression
   return $ Lambda arg ret

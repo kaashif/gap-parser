@@ -45,8 +45,6 @@ gapKeywords =
   , "TryNextMethod"
   , "Info"
   , "Assert"
-  , ":="
-  , "->"
   ]
 
 gapOperators =
@@ -67,6 +65,8 @@ gapOperators =
   , "not"
   , "mod"
   , "in"
+  , ":="
+  , "->"
   ]
 
 languageDef = emptyDef { Token.commentStart    = ""
@@ -77,8 +77,8 @@ languageDef = emptyDef { Token.commentStart    = ""
                        , Token.reservedNames   = gapKeywords
                        , Token.reservedOpNames = gapOperators
                        , Token.caseSensitive   = True
-                       , Token.opStart         = oneOf $ concat gapOperators
-                       , Token.opLetter        = oneOf $ concat gapOperators
+                       , Token.opStart         = oneOf $ map head gapOperators
+                       , Token.opLetter        = oneOf $ concat $ map tail gapOperators
                        }
 
 lexer :: Token.TokenParser u

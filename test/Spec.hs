@@ -6,7 +6,8 @@ import           Control.Monad
 checkExample (description, str, ast) =
   it description $ (parseString str) `shouldBe` ast
 
-examples =
+-- Examples I wrote as I was writing the parser
+myExamples =
   [ ("parses int assign"  , "a := 1;"  , (Assign "a" (Lit $ IntLit 1)))
   , ("parses float assign", "a := 1.0;", (Assign "a" (Lit $ FloatLit 1.0)))
   , ( "parses string assign"
@@ -56,7 +57,26 @@ examples =
     )
   ]
 
+-- Examples taken directly from https://www.gap-system.org/Manuals/doc/ref/chap4.html
+gapExamples =
+  [ ( "4.1 arithmetic"
+    , "1 + 2 * 3;"
+    , ExprStmt $ Binary Add (Lit $ IntLit 1) $ Binary Multiply
+                                                      (Lit $ IntLit 2)
+                                                      (Lit $ IntLit 3)
+    )
+  , ( "4.4 if whitespace"
+    , "if i<0 then a:=-i;else a:=i;fi;"
+    , IfElifElse [(Binary Less (Var "i") (Lit $ IntLit 0), Assign "a" (Neg $ Var "i"))]
+      (Assign "a" $ Var "i")
+    )
+  ]
+
+exampleSets = [("myExamples", myExamples), ("gapExamples", gapExamples)]
+
+checkExampleSet topName (exName, examples) =
+  describe (concat [topName, ":", exName]) $ mapM_ checkExample examples
+
 main :: IO ()
-main = hspec $ describe "Language.GAP.Parser.parseString" $ mapM_
-  checkExample
-  examples
+main =
+  hspec $ mapM_ (checkExampleSet "Language.GAP.Parser.parseString") exampleSets
