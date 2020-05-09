@@ -7,14 +7,14 @@ data Stmt = Seq [Stmt]
           | While Expr Stmt
           | ExprStmt Expr
           | Return Expr
-            deriving (Show)
+            deriving (Show, Eq)
 
 data Literal = BoolLit Bool
              | StringLit String
              | IntLit Integer
              | FloatLit Double
              | FuncDef [String] Stmt
-               deriving (Show)
+               deriving (Show, Eq)
 
 data BinOp = Add
            | Subtract
@@ -31,7 +31,7 @@ data BinOp = Add
            | In
            | Mod
            | Power
-             deriving (Show)
+             deriving (Show, Eq)
 
 data Expr = Lit Literal
           | Not Expr
@@ -39,4 +39,4 @@ data Expr = Lit Literal
           | Var String
           | FuncCall String [Expr]
           | List [Expr]
-            deriving (Show)
+            deriving (Show, Eq)

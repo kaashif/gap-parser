@@ -71,7 +71,7 @@ gapOperators =
 languageDef = emptyDef { Token.commentStart    = ""
                        , Token.commentEnd      = ""
                        , Token.commentLine     = "#"
-                       , Token.identStart      = alphaNum
+                       , Token.identStart      = letter
                        , Token.identLetter     = alphaNum <|> char '_'
                        , Token.reservedNames   = gapKeywords
                        , Token.reservedOpNames = gapOperators

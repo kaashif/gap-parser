@@ -11,7 +11,7 @@ import           Language.GAP.Lexer
 import           Language.GAP.Types
 
 whileParser :: Parser Stmt
-whileParser = whiteSpace >> statement
+whileParser = whiteSpace >> statements
 
 parseString :: String -> Stmt
 parseString str = case parse whileParser "" str of
@@ -25,18 +25,22 @@ parseFile file = do
     Left  e -> print e >> fail "parse error"
     Right r -> return r
 
-statement = do
-  list <- many1 statement'
+-- Statements - expressions plus things that don't evaluate to values
+
+statements = do
+  list <- many1 statement
   return $ if length list == 1 then head list else Seq list
 
-statement' :: Parser Stmt
-statement' = do
+statement :: Parser Stmt
+statement = do
   stmt <- returnStmt <|> ifStmt <|> whileStmt <|> assignStmt <|> exprStmt
   semi
   return stmt
 
+-- The only statements that evaluate to something are expressions
 exprStmt = liftM ExprStmt expression
 
+-- Note: return doesn't evaluate to a value, it's not an expression
 returnStmt = do
   reserved "return"
   expr <- expression
@@ -47,18 +51,18 @@ ifStmt = do
   reserved "if"
   cond <- expression
   reserved "then"
-  stmt1     <- statement
+  stmt1     <- statements
 
   elifConds <- many $ try $ do
     reserved "elif"
     elifCond <- expression
     reserved "then"
-    elifBody <- statement
+    elifBody <- statements
     return (elifCond, elifBody)
 
   elseBody <- optionMaybe $ try $ do
     reserved "else"
-    body <- statement
+    body <- statements
     return body
 
   reserved "fi"
@@ -72,7 +76,7 @@ whileStmt = do
   reserved "while"
   cond <- expression
   reserved "do"
-  stmt <- statement
+  stmt <- statements
   reserved "od"
   return $ While cond stmt
 
@@ -85,12 +89,7 @@ assignStmt = do
   expr <- expression
   return $ Assign var expr
 
-funcDef = do
-  reserved "function"
-  args <- parens (commaSep identifier)
-  body <- statement
-  reserved "end"
-  return $ FuncDef args body
+-- Expressions - things that evaluate to values
 
 expression :: Parser Expr
 expression =
@@ -130,10 +129,19 @@ operators =
 
 term = parens expression <|> liftM Var identifier <|> liftM Lit literal
 
+-- Literals
+
 literal =
   (reserved "true" >> return (BoolLit True))
     <|> try (reserved "false" >> return (BoolLit False))
-    <|> funcDef
+    <|> funcLit
     <|> fmap StringLit stringLiteral
     <|> try (fmap FloatLit float)
     <|> fmap IntLit integer
+
+funcLit = do
+  reserved "function"
+  args <- parens (commaSep identifier)
+  body <- statements
+  reserved "end"
+  return $ FuncDef args body
