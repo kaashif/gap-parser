@@ -37,11 +37,13 @@ data Expr = Lit Literal
           | Binary BinOp Expr Expr
           | Var String
           | FuncCall String [Expr]
+          | List [Expr]
             deriving (Show)
 
 data Stmt = Seq [Stmt]
           | Assign String Expr
-          | If Expr Stmt Stmt
+          | IfElif [(Expr, Stmt)]
+          | IfElifElse [(Expr, Stmt)] Stmt
           | While Expr Stmt
           | ExprStmt Expr
           | Return Expr
@@ -141,7 +143,7 @@ statement = do
 
 statement' :: Parser Stmt
 statement' = do
-  stmt <- try returnStmt <|> try ifStmt <|> try whileStmt <|> try assignStmt <|> try exprStmt
+  stmt <- returnStmt <|> ifStmt <|> whileStmt <|> assignStmt <|> exprStmt
   semi
   return stmt
 
@@ -158,10 +160,24 @@ ifStmt = do
   cond <- expression
   reserved "then"
   stmt1 <- statement
-  reserved "else"
-  stmt2 <- statement
+
+  elifConds <- many $ try $ do
+    reserved "elif"
+    elifCond <- expression
+    reserved "then"
+    elifBody <- statement
+    return (elifCond, elifBody)
+
+  elseBody <- optionMaybe $ try $ do
+    reserved "else"
+    body <- statement
+    return body
+
   reserved "fi"
-  return $ If cond stmt1 stmt2
+
+  return $ case elseBody of
+    Just body -> IfElifElse ((cond, stmt1):elifConds) body
+    Nothing -> IfElif $ (cond, stmt1):elifConds
 
 funcDef = do
   reserved "function"
@@ -176,17 +192,30 @@ whileStmt = do
   cond <- expression
   reserved "do"
   stmt <- statement
+  reserved "od"
   return $ While cond stmt
 
 assignStmt :: Parser Stmt
 assignStmt = do
-  var <- identifier
-  reserved ":="
+  var <- try $ do
+    var <- identifier
+    reserved ":="
+    return var
   expr <- expression
   return $ Assign var expr
 
 expression :: Parser Expr
-expression = buildExpressionParser operators term
+expression = try funcCallExpr <|> try listExpr <|> buildExpressionParser operators term
+
+squares = Token.brackets lexer
+listExpr = squares $ do
+  exprs <- commaSep expression
+  return $ List exprs
+
+funcCallExpr = do
+  function <- identifier
+  args <- parens $ commaSep expression
+  return $ FuncCall function args
 
 operators =
   [ [Infix (reservedOp "^" >> return (Binary Power)) AssocNone]
