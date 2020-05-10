@@ -41,7 +41,7 @@ data Expr = Lit Literal
           | Not Expr
           | Binary BinOp Expr Expr
           | Var String
-          | FuncCall String [Expr]
+          | FuncCall Expr [Expr]
           | List [Expr]
           | ListSlice Expr Expr
           | ListRange Expr (Maybe Expr) Expr

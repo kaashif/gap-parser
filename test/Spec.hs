@@ -44,12 +44,20 @@ myExamples =
     )
   , ( "parses function call"
     , "g(1);"
-    , (ExprStmt $ FuncCall "g" [Lit $ IntLit 1])
+    , (ExprStmt $ FuncCall (Var "g") [Lit $ IntLit 1])
+    )
+  , ( "parses lambda with spaces"
+    , "i -> i+1;"
+    , (ExprStmt $ Lit $ Lambda "i" $ Binary Add (Var "i") (Lit $ IntLit 1))
+    )
+  , ( "parses lambda without spaces"
+    , "i->i+1;"
+    , (ExprStmt $ Lit $ Lambda "i" $ Binary Add (Var "i") (Lit $ IntLit 1))
     )
   , ( "parses list map"
     , "List([1,2,3], x -> x+1);"
     , (ExprStmt $ FuncCall
-        "List"
+        (Var "List")
         [ List [Lit $ IntLit 1, Lit $ IntLit 2, Lit $ IntLit 3]
         , Lit $ Lambda "x" $ Binary Add (Var "x") (Lit $ IntLit 1)
         ]
@@ -67,7 +75,8 @@ gapExamples =
     )
   , ( "4.4 if single line"
     , "if i<0 then a:=-i;else a:=i;fi;"
-    , IfElifElse [(Binary Less (Var "i") (Lit $ IntLit 0), Assign "a" (Neg $ Var "i"))]
+    , IfElifElse
+      [(Binary Less (Var "i") (Lit $ IntLit 0), Assign "a" (Neg $ Var "i"))]
       (Assign "a" $ Var "i")
     )
   , ( "4.4 if multiline"
@@ -76,8 +85,36 @@ gapExamples =
       \else            # otherwise\n\
       \  a := i;       #   take itself\n\
       \fi;"
-    , IfElifElse [(Binary Less (Var "i") (Lit $ IntLit 0), Assign "a" (Neg $ Var "i"))]
+    , IfElifElse
+      [(Binary Less (Var "i") (Lit $ IntLit 0), Assign "a" (Neg $ Var "i"))]
       (Assign "a" $ Var "i")
+    )
+  , ( "4.5 record member access"
+    , "keys:=SortedList( GAPInfo.Keywords );; l:=Length( keys );;"
+    , Seq
+      [ Assign "keys" $ FuncCall (Var "SortedList") $ [Var "GAPInfo.Keywords"]
+      , Assign "l" $ FuncCall (Var "Length") $ [Var "keys"]
+      ]
+    )
+  , ( "4.5 list range and slicing"
+    , "arr:= List( [ 0 .. Int( l/4 )-1 ], i-> keys{ 4*i + [ 1 .. 4 ] } );;"
+    , Assign "arr" $ FuncCall
+      (Var "List")
+      [ ListRange
+        (Lit $ IntLit 0)
+        Nothing
+        (Binary
+          Subtract
+          (FuncCall (Var "Int") $ [(Binary Divide (Var "l") (Lit $ IntLit 4))])
+          (Lit $ IntLit 1)
+        )
+      , Lit $ Lambda "i" $ ListSlice
+        (Var "keys")
+        (Binary Add
+                (Binary Multiply (Lit $ IntLit 4) (Var "i"))
+                (ListRange (Lit $ IntLit 1) Nothing (Lit $ IntLit 4))
+        )
+      ]
     )
   ]
 

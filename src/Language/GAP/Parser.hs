@@ -93,11 +93,8 @@ expression = buildExpressionParser operators term
 
 listExpr = squares $ List <$> (commaSep expression)
 
--- of the form expr{expr}. Careful to avoid infinite recursion.
-listSlice = do
-  list  <- expression
-  slice <- braces expression
-  return $ ListSlice list slice
+listSlice = foldl ListSlice <$> notListSlice <*> many1 sliceArg
+  where sliceArg = braces expression
 
 -- expression of the form [first, second .. last] or [first .. last]
 listRange =
@@ -108,7 +105,8 @@ listRange =
     <*  (reservedOp "..")
     <*> expression
 
-funcCallExpr = FuncCall <$> identifier <*> (parens $ commaSep expression)
+funcCallExpr = foldl FuncCall <$> notFuncCall <*> many1 argList
+  where argList = parens $ commaSep expression
 
 operators =
   [ [Infix (reservedOp "^" >> return (Binary Power)) AssocNone]
@@ -134,10 +132,17 @@ operators =
     ]
   ]
 
-term =
+term = try funcCallExpr <|> try listSlice <|> okTerms
+
+-- Secretly we know that a listSlice can never give a function, only a
+-- list, so a listSlice is never the first term of a function call
+-- chain.
+notFuncCall = okTerms
+
+notListSlice = okTerms <|> try funcCallExpr
+
+okTerms =
   parens expression
-    <|> try funcCallExpr
---    <|> try listSlice
     <|> try listExpr
     <|> try listRange
     <|> try (liftM Lit literal)
