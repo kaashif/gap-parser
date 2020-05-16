@@ -1,6 +1,7 @@
 module Language.GAP.Parser where
 
 import           System.IO
+import           Data.Maybe
 import           Control.Monad
 import           Control.Applicative     hiding ( (<|>)
                                                 , many
@@ -105,8 +106,24 @@ listRange =
     <*  (reservedOp "..")
     <*> expression
 
-funcCallExpr = foldl FuncCall <$> notFuncCall <*> many1 argList
-  where argList = parens $ commaSep expression
+funcCallExpr = foldl (\x (y, z) -> FuncCall x y z) <$> notFuncCall <*> argLists
+ where
+  argLists = many1 argList
+  argList  = parens $ do
+    args <- commaSep expression
+    opts <- optionMaybe
+      $ if null args then try options else try colon >> try options
+    let realOpts = fromMaybe [] opts
+    return (args, realOpts)
+  options = commaSep option
+  option  = do
+    var <- try $ do
+      var <- identifier
+      reservedOp ":="
+      return var
+    expr <- expression
+    return (var, expr)
+
 
 operators =
   [ [Infix (reservedOp "^" >> return (Binary Power)) AssocNone]
@@ -137,6 +154,8 @@ term = try funcCallExpr <|> try listSlice <|> okTerms
 -- Secretly we know that a listSlice can never give a function, only a
 -- list, so a listSlice is never the first term of a function call
 -- chain.
+-- TODO: don't use that information! It's not the parser's job to
+-- typecheck!
 notFuncCall = okTerms
 
 notListSlice = okTerms <|> try funcCallExpr
@@ -145,8 +164,8 @@ okTerms =
   parens expression
     <|> try listExpr
     <|> try listRange
-    <|> try (liftM Lit literal)
-    <|> try (liftM Var identifier)
+    <|> try (Lit <$> literal)
+    <|> try (Var <$> identifier)
 
 -- Literals
 
@@ -158,6 +177,7 @@ literal =
     <|> try (fmap FloatLit float)
     <|> try (fmap IntLit integer)
     <|> try lambdaLit
+    <|> try recordLit
 
 funcLit = do
   reserved "function"
@@ -173,3 +193,7 @@ lambdaLit = do
     return arg
   ret <- expression
   return $ Lambda arg ret
+
+recordLit = RecordLit <$> (reserved "rec" *> parens opts)
+  where opts = commaSep opt
+        opt = curry id <$> identifier <* reservedOp ":=" <*> expression

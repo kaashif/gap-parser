@@ -94,3 +94,4 @@ squares = Token.brackets lexer
 braces = Token.braces lexer
 operator = Token.operator lexer
 comma = Token.comma lexer
+colon = Token.colon lexer

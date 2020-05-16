@@ -1,6 +1,6 @@
 module Language.GAP.Types where
 
-import Data.Maybe
+import Data.Maybe ()
 
 data Stmt = Seq [Stmt]
           | Assign String Expr
@@ -17,6 +17,7 @@ data Literal = BoolLit Bool
              | FloatLit Double
              | FuncDef [String] Stmt
              | Lambda String Expr
+             | RecordLit [(String, Expr)]
                deriving (Show, Eq)
 
 data BinOp = Add
@@ -41,7 +42,7 @@ data Expr = Lit Literal
           | Not Expr
           | Binary BinOp Expr Expr
           | Var String
-          | FuncCall Expr [Expr]
+          | FuncCall Expr [Expr] [(String, Expr)]
           | List [Expr]
           | ListSlice Expr Expr
           | ListRange Expr (Maybe Expr) Expr

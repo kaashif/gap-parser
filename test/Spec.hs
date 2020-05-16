@@ -44,7 +44,7 @@ myExamples =
     )
   , ( "parses function call"
     , "g(1);"
-    , (ExprStmt $ FuncCall (Var "g") [Lit $ IntLit 1])
+    , (ExprStmt $ FuncCall (Var "g") [Lit $ IntLit 1] [])
     )
   , ( "parses lambda with spaces"
     , "i -> i+1;"
@@ -61,7 +61,12 @@ myExamples =
         [ List [Lit $ IntLit 1, Lit $ IntLit 2, Lit $ IntLit 3]
         , Lit $ Lambda "x" $ Binary Add (Var "x") (Lit $ IntLit 1)
         ]
+        []
       )
+    )
+  , ( "parses record"
+    , "rec(x:=1,y:=2);"
+    , (ExprStmt $ Lit $ RecordLit [("x", Lit $ IntLit 1), ("y", Lit $ IntLit 2)])
     )
   ]
 
@@ -92,8 +97,8 @@ gapExamples =
   , ( "4.5 record member access"
     , "keys:=SortedList( GAPInfo.Keywords );; l:=Length( keys );;"
     , Seq
-      [ Assign "keys" $ FuncCall (Var "SortedList") $ [Var "GAPInfo.Keywords"]
-      , Assign "l" $ FuncCall (Var "Length") $ [Var "keys"]
+      [ Assign "keys" $ FuncCall (Var "SortedList") [Var "GAPInfo.Keywords"] []
+      , Assign "l" $ FuncCall (Var "Length") [Var "keys"] []
       ]
     )
   , ( "4.5 list range and slicing"
@@ -105,7 +110,7 @@ gapExamples =
         Nothing
         (Binary
           Subtract
-          (FuncCall (Var "Int") $ [(Binary Divide (Var "l") (Lit $ IntLit 4))])
+          (FuncCall (Var "Int") [(Binary Divide (Var "l") (Lit $ IntLit 4))] [])
           (Lit $ IntLit 1)
         )
       , Lit $ Lambda "i" $ ListSlice
@@ -115,6 +120,7 @@ gapExamples =
                 (ListRange (Lit $ IntLit 1) Nothing (Lit $ IntLit 4))
         )
       ]
+      []
     )
   ]
 
