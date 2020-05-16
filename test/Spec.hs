@@ -89,9 +89,10 @@ gapExamples =
     )
   , ( "4.4 if single line"
     , "if i<0 then a:=-i;else a:=i;fi;"
-    , IfElifElse
-      [(Binary Less (Var "i") (Lit $ IntLit 0), Assign "a" (Neg $ Var "i"))]
-      (Assign "a" $ Var "i")
+    , If
+      (Binary Less (Var "i") (Lit $ IntLit 0), Assign "a" (Neg $ Var "i"))
+      []
+      (Just (Assign "a" $ Var "i"))
     )
   , ( "4.4 if multiline"
     , "if i < 0 then   # if i is negative\n\
@@ -99,9 +100,10 @@ gapExamples =
       \else            # otherwise\n\
       \  a := i;       #   take itself\n\
       \fi;"
-    , IfElifElse
-      [(Binary Less (Var "i") (Lit $ IntLit 0), Assign "a" (Neg $ Var "i"))]
-      (Assign "a" $ Var "i")
+    , If
+      (Binary Less (Var "i") (Lit $ IntLit 0), Assign "a" (Neg $ Var "i"))
+      []
+      (Just (Assign "a" $ Var "i"))
     )
   , ( "4.5 record member access"
     , "keys:=SortedList( GAPInfo.Keywords );; l:=Length( keys );;"

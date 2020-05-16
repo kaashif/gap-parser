@@ -32,7 +32,9 @@ parseFile file = do
 -- Statements - expressions plus things that don't evaluate to values
 
 statements = f <$> many1 statement
-  where f list = if length list == 1 then head list else Seq list
+ where
+  f [x] = x
+  f xs  = Seq xs
 
 statement :: Parser Stmt
 statement = stmt <* many1 semi
@@ -45,30 +47,24 @@ exprStmt = ExprStmt <$> expression
 -- Note: return doesn't evaluate to a value, it's not an expression
 returnStmt = pure Return <* reserved "return" <*> expression
 
+
 ifStmt :: Parser Stmt
-ifStmt = do
-  reserved "if"
-  cond <- expression
-  reserved "then"
-  stmt1     <- statements
-
-  elifConds <- many $ try $ do
-    reserved "elif"
-    elifCond <- expression
-    reserved "then"
-    elifBody <- statements
-    return (elifCond, elifBody)
-
-  elseBody <- optionMaybe $ try $ do
-    reserved "else"
-    body <- statements
-    return body
-
-  reserved "fi"
-
-  return $ case elseBody of
-    Just body -> IfElifElse ((cond, stmt1) : elifConds) body
-    Nothing   -> IfElif $ (cond, stmt1) : elifConds
+ifStmt =
+  If
+    <$> ((,) <$> (reserved "if" *> expression) <* reserved "then" <*> statements
+        )
+    <*> elifConds
+    <*> elseBody
+    <*  reserved "fi"
+ where
+  elifConds =
+    many
+      $   try
+      $   (,)
+      <$> (reserved "elif" *> expression)
+      <*  reserved "then"
+      <*> statements
+  elseBody = optionMaybe $ try $ reserved "else" *> statements
 
 whileStmt :: Parser Stmt
 whileStmt =

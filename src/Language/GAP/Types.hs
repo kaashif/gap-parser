@@ -4,8 +4,7 @@ import Data.Maybe ()
 
 data Stmt = Seq [Stmt]
           | Assign String Expr
-          | IfElif [(Expr, Stmt)]
-          | IfElifElse [(Expr, Stmt)] Stmt
+          | If (Expr, Stmt) [(Expr, Stmt)] (Maybe Stmt)
           | While Expr Stmt
           | ExprStmt Expr
           | Return Expr
