@@ -106,24 +106,26 @@ listRange =
     <*  (reservedOp "..")
     <*> expression
 
-funcCallExpr = foldl (\x (y, z) -> FuncCall x y z) <$> notFuncCall <*> argLists
- where
-  argLists = many1 argList
-  argList  = parens $ do
-    args <- commaSep expression
-    opts <- optionMaybe
-      $ if null args then try options else try colon >> try options
-    let realOpts = fromMaybe [] opts
-    return (args, realOpts)
-  options = commaSep option
-  option  = do
-    var <- try $ do
-      var <- identifier
-      reservedOp ":="
-      return var
-    expr <- expression
-    return (var, expr)
+argLists = many1 argList
 
+argList =
+  parens
+    $   try ((,) [] <$> try options)
+    <|> try ((,) <$> args <* colon <*> options)
+    <|> try ((,) <$> args <*> pure [])
+
+args = commaSep1 expression
+
+options = commaSep1 funcOption
+funcOption = do
+  var <- try $ do
+    var <- identifier
+    reservedOp ":="
+    return var
+  expr <- expression
+  return (var, expr)
+
+funcCallExpr = foldl (\x (y, z) -> FuncCall x y z) <$> notFuncCall <*> argLists
 
 operators =
   [ [Infix (reservedOp "^" >> return (Binary Power)) AssocNone]
@@ -195,5 +197,6 @@ lambdaLit = do
   return $ Lambda arg ret
 
 recordLit = RecordLit <$> (reserved "rec" *> parens opts)
-  where opts = commaSep opt
-        opt = curry id <$> identifier <* reservedOp ":=" <*> expression
+ where
+  opts = commaSep opt
+  opt  = (,) <$> identifier <* reservedOp ":=" <*> expression

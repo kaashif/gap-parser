@@ -82,6 +82,7 @@ lexer = Token.makeTokenParser languageDef
 
 identifier = Token.identifier lexer
 commaSep = Token.commaSep lexer
+commaSep1 = Token.commaSep1 lexer
 reserved = Token.reserved lexer
 reservedOp = Token.reservedOp lexer
 parens = Token.parens lexer

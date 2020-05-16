@@ -46,6 +46,14 @@ myExamples =
     , "g(1);"
     , (ExprStmt $ FuncCall (Var "g") [Lit $ IntLit 1] [])
     )
+  , ( "parses function call with args and opts"
+    , "f(1, x : y:=z);"
+    , (ExprStmt $ FuncCall (Var "f") [Lit $ IntLit 1, Var "x"] [("y", Var "z")])
+    )
+  , ( "parses function call with just opts"
+    , "f(y:=true);"
+    , (ExprStmt $ FuncCall (Var "f") [] [("y", Lit $ BoolLit True)])
+    )
   , ( "parses lambda with spaces"
     , "i -> i+1;"
     , (ExprStmt $ Lit $ Lambda "i" $ Binary Add (Var "i") (Lit $ IntLit 1))
@@ -66,7 +74,8 @@ myExamples =
     )
   , ( "parses record"
     , "rec(x:=1,y:=2);"
-    , (ExprStmt $ Lit $ RecordLit [("x", Lit $ IntLit 1), ("y", Lit $ IntLit 2)])
+    , (ExprStmt $ Lit $ RecordLit [("x", Lit $ IntLit 1), ("y", Lit $ IntLit 2)]
+      )
     )
   ]
 
