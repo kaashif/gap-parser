@@ -36,7 +36,8 @@ statements = f <$> many1 statement
 
 statement :: Parser Stmt
 statement = stmt <* many1 semi
-  where stmt = returnStmt <|> ifStmt <|> whileStmt <|> assignStmt <|> exprStmt
+ where
+  stmt = returnStmt <|> ifStmt <|> whileStmt <|> try assignStmt <|> exprStmt
 
 -- The only statements that evaluate to something are expressions
 exprStmt = ExprStmt <$> expression
@@ -79,13 +80,7 @@ whileStmt =
     <*  reserved "od"
 
 assignStmt :: Parser Stmt
-assignStmt = do
-  var <- try $ do
-    var <- identifier
-    reservedOp ":="
-    return var
-  expr <- expression
-  return $ Assign var expr
+assignStmt = Assign <$> identifier <* reservedOp ":=" <*> expression
 
 -- Expressions - things that evaluate to values
 
@@ -117,13 +112,8 @@ argList =
 args = commaSep1 expression
 
 options = commaSep1 funcOption
-funcOption = do
-  var <- try $ do
-    var <- identifier
-    reservedOp ":="
-    return var
-  expr <- expression
-  return (var, expr)
+
+funcOption = (,) <$> identifier <* reservedOp ":=" <*> expression
 
 funcCallExpr = foldl (\x (y, z) -> FuncCall x y z) <$> notFuncCall <*> argLists
 
@@ -181,20 +171,13 @@ literal =
     <|> try lambdaLit
     <|> try recordLit
 
-funcLit = do
-  reserved "function"
-  args <- parens (commaSep identifier)
-  body <- statements
-  reserved "end"
-  return $ FuncDef args body
+funcLit =
+  FuncDef
+    <$> (reserved "function" *> parens (commaSep identifier))
+    <*> statements
+    <*  reserved "end"
 
-lambdaLit = do
-  arg <- try $ do
-    arg <- identifier
-    reservedOp "->"
-    return arg
-  ret <- expression
-  return $ Lambda arg ret
+lambdaLit = Lambda <$> identifier <* reservedOp "->" <*> expression
 
 recordLit = RecordLit <$> (reserved "rec" *> parens opts)
  where
