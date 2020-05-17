@@ -2,6 +2,7 @@ import           Test.Hspec
 import           Language.GAP.Parser
 import           Language.GAP.Types
 import           Control.Monad
+import           Test.QuickCheck
 
 checkExample (description, str, ast) =
   it description $ (parseString str) `shouldBe` ast
@@ -146,4 +147,8 @@ checkExampleSet topName (exName, examples) =
 
 main :: IO ()
 main =
-  hspec $ mapM_ (checkExampleSet "Language.GAP.Parser.parseString") exampleSets
+  hspec $ do
+    mapM_ (checkExampleSet "Language.GAP.Parser.parseString") exampleSets
+    describe "Language.GAP.Parser.printStmt" $ do
+      it "is left inverse to parseString" $ property $
+        \x -> (parseString . printStmt) x == (x :: Stmt)

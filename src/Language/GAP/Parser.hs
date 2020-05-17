@@ -2,6 +2,7 @@ module Language.GAP.Parser where
 
 import           System.IO
 import           Data.Maybe
+import           Data.List
 import           Control.Monad
 import           Control.Applicative     hiding ( (<|>)
                                                 , many
@@ -21,6 +22,87 @@ parseString :: String -> Stmt
 parseString str = case parse whileParser "" str of
   Left  e -> error $ show e
   Right r -> r
+
+printStmt :: Stmt -> String
+printStmt (Seq stmts      ) = concat $ map (\x -> printStmt x ++ ";") stmts
+printStmt (Assign var expr) = printAssign (var, expr)
+printStmt (If (cond1, body1) elifs elseBody) =
+  "if "
+    ++ printExpr cond1
+    ++ " then "
+    ++ printStmt body1
+    ++ " "
+    ++ (concat $ map
+         (\(cond, body) ->
+           "elif " ++ printExpr cond ++ " then " ++ printStmt body ++ "; "
+         )
+         elifs
+       )
+    ++ (case elseBody of
+         Just body -> "else " ++ printStmt body ++ "; "
+         Nothing   -> ""
+       )
+    ++ " fi;"
+
+printStmt (While cond body) =
+  "while " ++ printExpr cond ++ " do " ++ printStmt body ++ "; od;"
+
+printStmt (ExprStmt expr) = printExpr expr ++ ";"
+
+printStmt (Return   expr) = "return " ++ printExpr expr ++ ";"
+
+printExpr (Lit (BoolLit   b)) = show b
+printExpr (Lit (StringLit s)) = show s
+printExpr (Lit (IntLit    i)) = show i
+printExpr (Lit (FloatLit  d)) = show d
+printExpr (Lit (FuncDef args body)) =
+  "function (" ++ intercalate ", " args ++ ") " ++ printStmt body ++ "; end"
+printExpr (Lit (Lambda arg expr)) = arg ++ " -> " ++ printExpr expr
+printExpr (Lit (RecordLit args)) =
+  "rec(" ++ intercalate ", " (map printAssign args) ++ ")"
+printExpr (Neg expr) = "-" ++ brack (printExpr expr)
+printExpr (Not expr) = "not " ++ brack (printExpr expr)
+printExpr (Binary op left right) =
+  brack (printExpr left) ++ printOp op ++ brack (printExpr right)
+printExpr (Var s) = s
+printExpr (FuncCall f args namedArgs) =
+  brack (printExpr f)
+    ++ "("
+    ++ intercalate ", " (map printExpr args)
+    ++ if (length args > 0) && (length namedArgs > 0)
+         then ":"
+         else "" ++ intercalate ", " (map printAssign namedArgs) ++ ")"
+printExpr (List l) = "[" ++ (intercalate ", " $ map printExpr l) ++ "]"
+printExpr (ListSlice list slice) =
+  printExpr list ++ "{" ++ printExpr slice ++ "}"
+printExpr (ListRange first second end) = "["
+                                          ++ printExpr first
+                                          ++ case second of
+                                               Just e -> ", " ++ printExpr e
+                                               Nothing -> ""
+                                          ++ ".."
+                                          ++ printExpr end
+                                          ++ "]"
+
+printAssign (var, expr) = var ++ " := " ++ printExpr expr
+brack s = "(" ++ s ++ ")"
+
+printOp op = case op of
+               Add -> "+"
+               Subtract -> "-"
+               Multiply -> "*"
+               Divide -> "/"
+               And -> " and "
+               Or -> " or "
+               Greater -> ">"
+               GreaterEq -> ">="
+               Less -> "<"
+               LessEq -> "<="
+               Equal -> "="
+               NotEqual -> "<>"
+               In -> " in "
+               Mod -> " mod "
+               Power -> "^"
 
 parseFile :: String -> IO Stmt
 parseFile file = do
