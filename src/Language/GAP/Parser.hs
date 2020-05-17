@@ -102,10 +102,8 @@ argLists = many1 argList
 argList =
   parens
     $   try ((,) [] <$> try options)
-    <|> try ((,) <$> args <* colon <*> options)
-    <|> try ((,) <$> args <*> pure [])
-
-args = commaSep1 expression
+    <|> try ((,) <$> (commaSep1 expression) <* colon <*> options)
+    <|> try ((,) <$> (commaSep expression) <*> pure [])
 
 options = commaSep1 funcOption
 

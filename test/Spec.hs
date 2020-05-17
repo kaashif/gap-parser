@@ -42,9 +42,13 @@ myExamples =
     , "function(arg1, arg2) return arg1; end;"
     , (ExprStmt $ Lit $ FuncDef ["arg1", "arg2"] $ Return $ Var "arg1")
     )
-  , ( "parses function call"
+  , ( "parses function call with arg"
     , "g(1);"
     , (ExprStmt $ FuncCall (Var "g") [Lit $ IntLit 1] [])
+    )
+  , ( "parses function call no args"
+    , "func();"
+    , (ExprStmt $ FuncCall (Var "func") [] [])
     )
   , ( "parses function call with args and opts"
     , "f(1, x : y:=z);"
