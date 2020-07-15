@@ -19,6 +19,12 @@ dependencies:
 library:
   source-dirs: src
 
+executables:
+  gap2rust:
+    source-dirs: bin
+    main: gap2rust.hs
+    dependencies: gap-parser
+
 tests:
   gap-parser-test:
     main:                Spec.hs

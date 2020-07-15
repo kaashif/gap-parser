@@ -4,7 +4,7 @@ cabal-version: 1.12
 --
 -- see: https://github.com/sol/hpack
 --
--- hash: 7ebf93d74dd067b93eae2e6a04a3383fdd12fb6f01dc40b0f0fd9d02f6ee0397
+-- hash: 8c188640fecb508f796d1e777f9f73ec34b18e70ab884e2c32eac30bbfe39e6c
 
 name:           gap-parser
 version:        0.1.0.0
@@ -35,6 +35,19 @@ library
       src
   build-depends:
       base >=4.7 && <5
+    , hspec
+    , parsec
+  default-language: Haskell2010
+
+executable gap2rust
+  main-is: gap2rust.hs
+  other-modules:
+      Paths_gap_parser
+  hs-source-dirs:
+      bin
+  build-depends:
+      base >=4.7 && <5
+    , gap-parser
     , hspec
     , parsec
   default-language: Haskell2010
