@@ -2,6 +2,7 @@ import           Language.GAP.Parser            ( parseString )
 import           Language.GAP.Types
 import           Data.Ratio
 import           Control.Applicative
+import           Data.List
 
 
 -- This is just some basic stuff to allow conversion to Rust source,
@@ -12,11 +13,37 @@ data CyclotomicExpr = CycMany [CyclotomicExpr]
                     | CycSingle Cyclotomic
                     deriving Show
 
+cyc2rust (CycMany cycs) = "vec![" ++ intercalate "," (map cyc2rust cycs) ++ "]"
+cyc2rust (CycSingle (Cyclotomic n coeffs)) =
+  "GenericCyclotomic { exp_coeffs: "
+    ++ coeffs2rust coeffs
+    ++ ".into_iter().collect(), order: "
+    ++ show n
+    ++ "}"
+
+coeffs2rust coeffs =
+  "vec!["
+    ++ intercalate
+         ","
+         (map
+           (\(exp, rational) ->
+             "("
+               ++ show exp
+               ++ ", Q::new(Z::from("
+               ++ show (numerator rational)
+               ++ "), Z::from("
+               ++ show (denominator rational)
+               ++ ")))"
+           )
+           coeffs
+         )
+    ++ "]"
+
 -- not real error handling etc, yes I know
 ast2rust :: Stmt -> Maybe String
 ast2rust (ExprStmt expr) = do
   cycs <- parseManyOrSingle expr
-  return $ show cycs
+  return $ cyc2rust cycs
 
 parseManyOrSingle :: Expr -> Maybe CyclotomicExpr
 parseManyOrSingle (List exprs) = fmap CycMany $ mapM parseManyOrSingle exprs
@@ -58,7 +85,8 @@ parseCoeffTerm (Binary Multiply rationalExpr noCoeffTermExpr) = do
     CycSingle (Cyclotomic n [(k, 1)]) ->
       return $ CycSingle $ Cyclotomic n [(k, rational)]
     _ -> Nothing
-parseCoeffTerm (Neg expr) = parseCoeffTerm (Binary Multiply (Lit $ IntLit $ -1) expr)
+parseCoeffTerm (Neg expr) =
+  parseCoeffTerm (Binary Multiply (Lit $ IntLit $ -1) expr)
 parseCoeffTerm _ = Nothing
 
 parseRational :: Expr -> Maybe Rational
