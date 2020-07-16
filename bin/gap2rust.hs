@@ -29,11 +29,11 @@ coeffs2rust coeffs =
            (\(exp, rational) ->
              "("
                ++ show exp
-               ++ ", Q::new(Z::from("
+               ++ ",("
                ++ show (numerator rational)
-               ++ "), Z::from("
+               ++ ","
                ++ show (denominator rational)
-               ++ ")))"
+               ++ "))"
            )
            coeffs
          )
