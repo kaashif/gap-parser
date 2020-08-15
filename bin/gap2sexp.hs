@@ -73,6 +73,7 @@ parseRational (Binary Divide (Lit (IntLit num)) (Lit (IntLit denom))) =
 parseRational (Binary Divide (Neg (Lit (IntLit num))) (Lit (IntLit denom))) =
   return $ -num % denom
 parseRational (Lit (IntLit n)) = return $ n % 1
+parseRational (Neg (Lit (IntLit n))) = return $ -n % 1
 parseRational _                = Nothing
 
 parseRationalCyc expr = do
