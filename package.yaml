@@ -20,9 +20,9 @@ library:
   source-dirs: src
 
 executables:
-  gap2rust:
+  gap2sexp:
     source-dirs: bin
-    main: gap2rust.hs
+    main: gap2sexp.hs
     dependencies: gap-parser
 
 tests:

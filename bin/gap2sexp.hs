@@ -13,37 +13,15 @@ data CyclotomicExpr = CycMany [CyclotomicExpr]
                     | CycSingle Cyclotomic
                     deriving Show
 
-cyc2rust (CycMany cycs) = "vec![" ++ intercalate "," (map cyc2rust cycs) ++ "]"
-cyc2rust (CycSingle (Cyclotomic n coeffs)) =
-  "GenericCyclotomic { exp_coeffs: "
-    ++ coeffs2rust coeffs
-    ++ ".into_iter().collect(), order: "
-    ++ show n
-    ++ "}"
+cyc2sexp (CycMany cycs) = "(list " ++ intercalate " " (map cyc2sexp cycs) ++ ")"
+cyc2sexp (CycSingle (Cyclotomic n coeffs)) = "(cyclotomic (order " ++ show n ++ ") (coeffs " ++ intercalate " " (map coeff2sexp coeffs) ++ "))"
 
-coeffs2rust coeffs =
-  "vec!["
-    ++ intercalate
-         ","
-         (map
-           (\(exp, rational) ->
-             "("
-               ++ show exp
-               ++ ",("
-               ++ show (numerator rational)
-               ++ ","
-               ++ show (denominator rational)
-               ++ "))"
-           )
-           coeffs
-         )
-    ++ "]"
+coeff2sexp (exp, rat) = "(coeff (exponent "++ show exp ++ ") (rational " ++ show (numerator rat) ++ " " ++ show (denominator rat) ++"))"
 
--- not real error handling etc, yes I know
-ast2rust :: Stmt -> Maybe String
-ast2rust (ExprStmt expr) = do
+ast2sexp :: Stmt -> Maybe String
+ast2sexp (ExprStmt expr) = do
   cycs <- parseManyOrSingle expr
-  return $ cyc2rust cycs
+  return $ cyc2sexp cycs
 
 parseManyOrSingle :: Expr -> Maybe CyclotomicExpr
 parseManyOrSingle (List exprs) = fmap CycMany $ mapM parseManyOrSingle exprs
@@ -120,6 +98,6 @@ main :: IO ()
 main = do
   gapSrc <- getContents
   let ast = parseString gapSrc
-  case ast2rust ast of
-    Just rust -> putStrLn rust
+  case ast2sexp ast of
+    Just sexp -> putStrLn sexp
     Nothing   -> putStrLn $ "failed, ast is: " ++ show ast
